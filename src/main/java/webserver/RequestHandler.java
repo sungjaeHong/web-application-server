@@ -119,7 +119,7 @@ public class RequestHandler extends Thread {
 				StringBuilder sb = new StringBuilder();
 				Collection<User> c = DataBase.findAll();
 				log.debug("user : "+c.size());
-				sb.append("<table>");
+				sb.append("<table border='1'>");
 				for(User user : c){
 					sb.append("<tr>");
 					sb.append("<td>"+user.getUserId()+"</td>");
@@ -139,6 +139,7 @@ public class RequestHandler extends Thread {
 			else if(url.endsWith(".css")){
 				body = Files.readAllBytes(new File("./webapp"+url).toPath());
 				responseCss(dos, body.length);
+				responseBody(dos, body);
 			}
 			else	{
 				body = Files.readAllBytes(new File("./webapp"+url).toPath());
