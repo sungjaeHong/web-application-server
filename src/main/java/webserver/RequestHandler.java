@@ -40,14 +40,14 @@ public class RequestHandler extends Thread {
 				return;
 			}
 
-			log.debug("request line : {}", line);
+			//log.debug("request line : {}", line);
 			String[] tokens = line.split(" ");
 
 			int contentLength = 0;
 			boolean logined = false;
 			while (!line.equals("")) {
 				line = br.readLine();
-				log.debug("header : {}", line);
+				//log.debug("header : {}", line);
 				
 				if (line.contains("Content-Length")) {
 					contentLength = getContentLength(line);
