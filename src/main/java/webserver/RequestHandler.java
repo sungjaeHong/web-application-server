@@ -42,7 +42,6 @@ public class RequestHandler extends Thread {
 			byte[] body = null;
 			String line = br.readLine();
 			String url = HttpRequestUtils.getURL(line);
-			log.debug("url : {}",url);
 			String firstHeader = line;
 			Map<String, String> header = new HashMap<String,String>();
 			while(!"".equals(line)){
@@ -55,65 +54,29 @@ public class RequestHandler extends Thread {
 			}
 
 			if(url.startsWith("/user/create")){						//회원가입
-				if(firstHeader.split(" ")[0].equals("GET"))	{
-					int index = url.indexOf("?");
-					String parameters = url.substring(index+1);
-					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(parameters);
-					User user = new User(paramMap.get("userId"),paramMap.get("password"),paramMap.get("name"),paramMap.get("email"));
-					DataBase.addUser(user);
-					url = "/index.html";
-					response302Header(dos, url);
-				}
-				else if(firstHeader.split(" ")[0].equals("POST"))	{
-					String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
-					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
-					User user = new User(paramMap.get("userId"),paramMap.get("password"),paramMap.get("name"),paramMap.get("email"));
-					log.debug("addUser");
-					DataBase.addUser(user);
-					url = "/index.html";
-					response302Header(dos, url);
+				String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
+				Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
+				User user = new User(paramMap.get("userId"),paramMap.get("password"),paramMap.get("name"),paramMap.get("email"));
+				log.debug("addUser");
+				DataBase.addUser(user);
+				url = "/index.html";
+				response302Header(dos, url);
+			} else if(url.equals("/user/login")){					//로그인
 
+				String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
+				Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
+				User loginUser = DataBase.getUser(paramMap.get("userId"));
+				if(loginUser==null ){		//ID가 없을 때
+					log.debug("Login Error! "+paramMap.get("userId")+"{}",firstHeader);
+					response302Header(dos, "/user/login_failed.html");
 				}
-			} else if(url.equals("/user/login")){						//로그인
-				if(firstHeader.split(" ")[0].equals("GET"))	{
-					int index = url.indexOf("?");
-					String parameters = url.substring(index+1);
-					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(parameters);
-					User loginUser = DataBase.getUser(paramMap.get("userId"));
-					if(loginUser==null ){
-						log.debug("Login Error!  {}",firstHeader);
-						url = "/user/login_failed.html";
-						response302Header(dos, url);
-					}
-					if(loginUser.getPassword().equals(paramMap.get("password"))){
-						url = "/index.html";
-						setCookies(dos, url);
-						//response302Header(dos, url);
-					} else	{
-						url = "/user/login_failed.html";
-						response302Header(dos, url);
-					}
+				if(loginUser!=null && loginUser.getPassword().equals(paramMap.get("password"))){
+					setCookies(dos, "/index.html");
+				} else	{
+					response302Header(dos, "/user/login_failed.html");
+				}
 
-				}
-				else if(firstHeader.split(" ")[0].equals("POST"))	{
-					String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
-					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
-					User loginUser = DataBase.getUser(paramMap.get("userId"));
-					if(loginUser==null ){
-						log.debug("Login Error! "+paramMap.get("userId")+"{}",firstHeader);
-						url = "/user/login_failed.html";
-						response302Header(dos, url);
-					}
-					if(loginUser!=null && loginUser.getPassword().equals(paramMap.get("password"))){
-						url = "/index.html";
-						setCookies(dos, url);
-						//response302Header(dos, url);
-					} else	{
-						url = "/user/login_failed.html";
-						response302Header(dos, url);
-					}
 
-				}
 			} else if(url.startsWith("/user/list")){
 				body = Files.readAllBytes(new File("./webapp"+url).toPath());
 				StringBuilder sb = new StringBuilder();
@@ -132,7 +95,7 @@ public class RequestHandler extends Thread {
 				byte[] destination = new byte[body.length+table.length];
 				System.arraycopy(body, 0, destination, 0, body.length);
 				System.arraycopy(table, 0, destination, body.length, table.length);
-				
+
 				response200Header(dos, destination.length);
 				responseBody(dos, destination);
 			}
