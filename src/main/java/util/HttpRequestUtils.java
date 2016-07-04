@@ -105,5 +105,15 @@ public class HttpRequestUtils {
 		public String toString() {
 			return "Pair [key=" + key + ", value=" + value + "]";
 		}
+		
+		
+	}
+	
+	public static String getURL(String param){
+		String url = param.split(" ")[1];
+		if(param.split(" ").length==1){
+			return "";
+		}
+		return url;
 	}
 }

@@ -21,4 +21,8 @@ public class DataBase {
 	public static Collection<User> findAll() {
 		return users.values();
 	}
+	
+	public static User getUser(String userId){
+		return users.get(userId);
+	}
 }
