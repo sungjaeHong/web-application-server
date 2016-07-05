@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import db.DataBase;
+import http.HttpRequest;
 import model.User;
 import util.HttpRequestUtils;
 import util.IOUtils;
@@ -39,21 +40,13 @@ public class RequestHandler extends Thread {
 			InputStreamReader isr = new InputStreamReader(in);
 			BufferedReader br = new BufferedReader(isr);
 
+			HttpRequest httpRequest = new HttpRequest(in);
+			log.debug("custom : {}",httpRequest.getPath());
+			
 			byte[] body = null;
-			String line = br.readLine();
-			String url = HttpRequestUtils.getURL(line);
-			log.debug("url : {}",url);
-			String firstHeader = line;
-			Map<String, String> header = new HashMap<String,String>();
-			while(!"".equals(line)){
-				if(line==null){	log.debug("null");return;	}
-				line=br.readLine();
-				String[] headerToken = line.split(":");
-				if(headerToken.length==2)	{
-					header.put(headerToken[0],headerToken[1].trim());
-				}
-			}
-
+			log.debug("url : 1111");
+			String url = httpRequest.getPath();
+			String firstHeader = httpRequest.getMethod();
 			if(url.startsWith("/user/create")){						//회원가입
 				if(firstHeader.split(" ")[0].equals("GET"))	{
 					int index = url.indexOf("?");
@@ -65,7 +58,7 @@ public class RequestHandler extends Thread {
 					response302Header(dos, url);
 				}
 				else if(firstHeader.split(" ")[0].equals("POST"))	{
-					String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
+					String requestBody = IOUtils.readData(br, Integer.parseInt(httpRequest.getHeaders("Content-Length")));
 					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
 					User user = new User(paramMap.get("userId"),paramMap.get("password"),paramMap.get("name"),paramMap.get("email"));
 					log.debug("addUser");
@@ -96,7 +89,7 @@ public class RequestHandler extends Thread {
 
 				}
 				else if(firstHeader.split(" ")[0].equals("POST"))	{
-					String requestBody = IOUtils.readData(br, Integer.parseInt(header.get("Content-Length")));
+					String requestBody = IOUtils.readData(br, Integer.parseInt(httpRequest.getHeaders("Content-Length")));
 					Map<String, String> paramMap = HttpRequestUtils.parseQueryString(requestBody);
 					User loginUser = DataBase.getUser(paramMap.get("userId"));
 					if(loginUser==null ){
